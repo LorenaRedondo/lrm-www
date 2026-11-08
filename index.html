@@ -20,7 +20,8 @@
 
 <header class="nav" id="nav">
   <a class="brand" href="#top">L. Redondo-Morata</a>
-  <nav aria-label="Primary">
+  <button id="menu" class="icon-btn menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="links">☰</button>
+  <nav id="links" aria-label="Primary">
     <a href="#about">About</a>
     <a href="#research">Research</a>
     <a href="#publications">Publications</a>
@@ -51,8 +52,15 @@
 
 <section id="about" class="wrap">
   <h2><span class="mono num">01</span> About</h2>
-  <div class="grid two">
+  <div class="about-top">
+    <!-- PHOTO: drop a portrait at assets/lorena.jpg (square or 4:5, min 800px wide). Until then a placeholder is shown. -->
+    <figure class="portrait">
+      <div class="ph mono" aria-hidden="true">PHOTO<br><small>assets/lorena.jpg</small></div>
+      <img src="assets/lorena.jpg" alt="Portrait of Lorena Redondo-Morata" onerror="this.remove()">
+    </figure>
     <p class="big">Lorena is a researcher at Inserm in Marseille whose work sits at the crossroads of biophysics, membrane biology and scanning probe microscopy.</p>
+  </div>
+  <div class="about-text">
     <div>
       <p>She is an expert in atomic force microscopy (AFM) and high-speed AFM (HS-AFM), techniques that allow individual biomolecules and membranes to be imaged in liquid, at nanometre resolution and, with HS-AFM, in real time. She combines imaging with force spectroscopy to link how biological structures <em>look</em>, <em>move</em> and <em>resist force</em>.</p>
       <p>Her research has addressed how ESCRT-III protein assemblies deform and remodel membranes, how lipid bilayers respond mechanically to their composition and environment, and how fast force measurements reveal the physics of membrane rupture.</p>
