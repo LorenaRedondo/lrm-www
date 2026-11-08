@@ -59,3 +59,11 @@ document.getElementById('y').textContent = new Date().getFullYear();
   const loop = () => { t += 0.012; draw(); if (!reduce) requestAnimationFrame(loop); };
   loop();
 })();
+
+// Mobile menu
+(() => {
+  const b = document.getElementById('menu'), n = document.getElementById('links');
+  const set = o => { n.classList.toggle('open', o); b.setAttribute('aria-expanded', o); };
+  b.addEventListener('click', () => set(!n.classList.contains('open')));
+  n.addEventListener('click', e => { if (e.target.tagName === 'A') set(false); });
+})();
