@@ -1,61 +1,79 @@
-// Nav state + theme
 const nav = document.getElementById('nav');
-const onScroll = () => nav.classList.toggle('solid', scrollY > innerHeight * 0.7);
-addEventListener('scroll', onScroll, { passive: true }); onScroll();
+const onScroll = () => nav.classList.toggle('solid', scrollY > 40);
+addEventListener('scroll', onScroll, { passive: true });
+onScroll();
 
-const root = document.documentElement;
-try { const t = localStorage.getItem('theme'); if (t) root.dataset.theme = t; } catch (e) {}
-document.getElementById('theme').addEventListener('click', () => {
-  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
-  const cur = root.dataset.theme || (dark ? 'dark' : 'light');
-  const next = cur === 'dark' ? 'light' : 'dark';
-  root.dataset.theme = next;
-  try { localStorage.setItem('theme', next); } catch (e) {}
-});
 document.getElementById('y').textContent = new Date().getFullYear();
 
-// Hero: simulated AFM raster scan of a membrane-like surface (stacked line profiles)
+// A restrained HS-AFM-inspired raster used as an illustrative research figure.
 (() => {
-  const c = document.getElementById('afm'), g = c.getContext('2d');
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let W, H, dpr, t = 0;
-  const resize = () => {
-    dpr = Math.min(devicePixelRatio || 1, 2);
-    W = c.clientWidth; H = c.clientHeight;
-    c.width = W * dpr; c.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0);
-  };
-  addEventListener('resize', resize); resize();
+  const canvas = document.getElementById('afm');
+  const context = canvas.getContext('2d');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let width;
+  let height;
+  let time = 0;
 
-  // height function: ring-like protein assemblies + soft background, drifting slowly
-  const h = (x, y, t) => {
-    const a = Math.sin(x * 0.011 + t * 0.4) * Math.cos(y * 0.014 - t * 0.3) * 6;
-    let s = a;
-    for (let i = 0; i < 5; i++) {
-      const cx = (0.15 + 0.17 * i) * W + Math.sin(t * 0.2 + i) * 30;
-      const cy = (0.35 + 0.12 * ((i * 3) % 5)) * H + Math.cos(t * 0.25 + i * 2) * 20;
-      const r = Math.hypot(x - cx, y - cy);
-      s += 26 * Math.exp(-Math.pow((r - 70) / 18, 2)) - 6 * Math.exp(-Math.pow(r / 40, 2));
+  const resize = () => {
+    const ratio = Math.min(devicePixelRatio || 1, 2);
+    width = canvas.clientWidth;
+    height = canvas.clientHeight;
+    canvas.width = width * ratio;
+    canvas.height = height * ratio;
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  };
+
+  const surface = (x, y, t) => {
+    let value = Math.sin(x * .01 + t * .32) * Math.cos(y * .013 - t * .21) * 7;
+    for (let i = 0; i < 6; i += 1) {
+      const cx = (.47 + .105 * i) * width + Math.sin(t * .22 + i * 1.7) * 24;
+      const cy = (.24 + .13 * ((i * 2) % 5)) * height + Math.cos(t * .18 + i) * 22;
+      const radius = Math.hypot(x - cx, y - cy);
+      value += 30 * Math.exp(-Math.pow((radius - 58 - i * 3) / 14, 2));
+      value -= 8 * Math.exp(-Math.pow(radius / 34, 2));
     }
-    return s;
+    return value;
   };
 
   const draw = () => {
-    g.clearRect(0, 0, W, H);
-    const rows = 46, step = 5, gap = H / rows * 1.15, top = H * 0.12;
-    const scanRow = (t * 6) % (rows + 10);
-    for (let r = 0; r < rows; r++) {
-      const y0 = top + r * gap;
-      g.beginPath();
-      for (let x = 0; x <= W; x += step) {
-        const y = y0 - h(x, y0, t);
-        x ? g.lineTo(x, y) : g.moveTo(x, y);
+    context.clearRect(0, 0, width, height);
+    const rows = 54;
+    const gap = height / rows * 1.12;
+    const scanRow = (time * 20) % (rows + 12);
+
+    for (let row = 0; row < rows; row += 1) {
+      const baseline = height * .09 + row * gap;
+      context.beginPath();
+      for (let x = 0; x <= width; x += 5) {
+        const y = baseline - surface(x, baseline, time);
+        if (x === 0) context.moveTo(x, y);
+        else context.lineTo(x, y);
       }
-      const hot = Math.abs(r - scanRow) < 1.2;
-      g.strokeStyle = hot ? 'rgba(46,230,207,0.95)' : `rgba(120,170,255,${0.10 + 0.22 * (r / rows)})`;
-      g.lineWidth = hot ? 1.8 : 1;
-      g.stroke();
+
+      const isScan = Math.abs(row - scanRow) < 1.1;
+      const lateRow = row / rows;
+      context.strokeStyle = isScan
+        ? 'rgba(123,62,77,.72)'
+        : `rgba(49,95,125,${.08 + .29 * lateRow})`;
+      context.lineWidth = isScan ? 1.6 : 1;
+      context.stroke();
     }
+
+    context.beginPath();
+    context.moveTo(width * .44, height * .78);
+    context.lineTo(width * .96, height * .78);
+    context.strokeStyle = 'rgba(23,54,80,.5)';
+    context.lineWidth = 1;
+    context.stroke();
   };
-  const loop = () => { t += 0.012; draw(); if (!reduce) requestAnimationFrame(loop); };
+
+  const loop = () => {
+    time += .02;
+    draw();
+    if (!reduceMotion) requestAnimationFrame(loop);
+  };
+
+  addEventListener('resize', resize);
+  resize();
   loop();
 })();
